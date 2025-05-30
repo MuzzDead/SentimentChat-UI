@@ -1,13 +1,46 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Box, TextField, Button, Paper, Typography } from '@mui/material';
+import { Box, TextField, Button, Paper, Typography, Chip } from '@mui/material';
 
 export default function ChatBox({ messages, onSendMessage, disabled }) {
   const [input, setInput] = useState('');
   const [username, setUsername] = useState('');
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // Sentiment configuration
+  const getSentimentConfig = (sentiment) => {
+    const normalizedSentiment = sentiment?.toLowerCase() || 'neutral';
+    
+    switch (normalizedSentiment) {
+      case 'positive':
+        return {
+          color: '#4caf50',
+          backgroundColor: '#e8f5e8',
+          borderColor: '#81c784',
+          emoji: '😊',
+          label: 'Positive'
+        };
+      case 'negative':
+        return {
+          color: '#f44336',
+          backgroundColor: '#ffebee',
+          borderColor: '#e57373',
+          emoji: '😞',
+          label: 'Negative'
+        };
+      case 'neutral':
+      default:
+        return {
+          color: '#757575',
+          backgroundColor: '#f5f5f5',
+          borderColor: '#bdbdbd',
+          emoji: '😐',
+          label: 'Neutral'
+        };
+    }
+  };
 
   // Check for username changes periodically or on focus
   const checkUsername = () => {
@@ -106,6 +139,7 @@ export default function ChatBox({ messages, onSendMessage, disabled }) {
       >
         {messages.map((msg, index) => {
           const isMine = msg.sender === username;
+          const sentimentConfig = getSentimentConfig(msg.sentiment);
 
           return (
             <Box
@@ -125,12 +159,47 @@ export default function ChatBox({ messages, onSendMessage, disabled }) {
                   maxWidth: '70%',
                   boxShadow: 1,
                   wordBreak: 'break-word',
+                  position: 'relative',
+                  border: isMine ? 'none' : `2px solid ${sentimentConfig.borderColor}`,
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  {msg.sender}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                    {msg.sender}
+                  </Typography>
+                  {!isMine && (
+                    <Chip
+                      label={`${sentimentConfig.emoji} ${sentimentConfig.label}`}
+                      size="small"
+                      sx={{
+                        backgroundColor: sentimentConfig.backgroundColor,
+                        color: sentimentConfig.color,
+                        fontSize: '0.7rem',
+                        height: '20px',
+                        borderRadius: '10px',
+                        '& .MuiChip-label': {
+                          px: 1
+                        }
+                      }}
+                    />
+                  )}
+                </Box>
                 <Typography variant="body1">{msg.text}</Typography>
+                
+                {/* Sentiment indicator bar at the bottom - only for other users */}
+                {!isMine && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '3px',
+                      backgroundColor: sentimentConfig.color,
+                      borderRadius: '0 0 12px 12px',
+                    }}
+                  />
+                )}
               </Box>
             </Box>
           );

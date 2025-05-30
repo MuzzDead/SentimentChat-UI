@@ -5,7 +5,7 @@ import ChatBox from './ChatBox';
 import axios from 'axios';
 import UsernamePopup from './UsernamePopup';
 
-const API_BASE_URL = 'https://sentimentchat-b9dxc7auezc6aqh6.westeurope-01.azurewebsites.net';
+const API_BASE_URL = 'https://localhost:7055';
 const API_URL = `${API_BASE_URL}/api/ChatMessage`;
 const HUB_URL = `${API_BASE_URL}/chathub`;
 
@@ -37,8 +37,12 @@ export default function ChatContainer() {
           .configureLogging(signalR.LogLevel.Information)
           .build();
 
-        conn.on('ReceiveMessage', (sender, message) => {
-          setMessages((prev) => [...prev, { sender, text: message }]);
+        conn.on('ReceiveMessage', (sender, message, sentiment) => {
+          setMessages((prev) => [...prev, { 
+            sender, 
+            text: message, 
+            sentiment: sentiment || 'neutral' 
+          }]);
         });
 
         conn.onclose(() => {
@@ -79,6 +83,7 @@ export default function ChatContainer() {
         const loaded = response.data.map((msg) => ({
           sender: msg.username,
           text: msg.message,
+          sentiment: msg.sentiment || 'neutral'
         }));
         setMessages(loaded);
       } catch (error) {
@@ -100,12 +105,12 @@ export default function ChatContainer() {
   const handleSendMessage = async (text) => {
     if (!connection || connectionStatus !== 'connected') {
       console.error('No connection available');
-      alert('З\'єднання відсутнє. Спробуйте пізніше.');
+      alert('Connection unavailable. Please try again later.');
       return;
     }
 
     if (!username.trim()) {
-      alert('Будь ласка, введіть ваше ім\'я');
+      alert('Please enter your username');
       return;
     }
 
