@@ -5,7 +5,7 @@ import ChatBox from './ChatBox';
 import axios from 'axios';
 import UsernamePopup from './UsernamePopup';
 
-const API_BASE_URL = 'https://localhost:7055';
+const API_BASE_URL = 'https://sentimentchat-b9dxc7auezc6aqh6.westeurope-01.azurewebsites.net';
 const API_URL = `${API_BASE_URL}/api/ChatMessage`;
 const HUB_URL = `${API_BASE_URL}/chathub`;
 
