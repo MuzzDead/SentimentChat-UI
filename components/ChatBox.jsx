@@ -3,18 +3,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, TextField, Button, Paper, Typography } from '@mui/material';
 
-export default function ChatBox({ messages, onSendMessage }) {
+export default function ChatBox({ messages, onSendMessage, disabled }) {
   const [input, setInput] = useState('');
   const [username, setUsername] = useState('');
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Зчитуємо username з sessionStorage один раз після монтування компонента
-  useEffect(() => {
+  // Check for username changes periodically or on focus
+  const checkUsername = () => {
     if (typeof window !== 'undefined') {
       const storedName = sessionStorage.getItem('username') || '';
       setUsername(storedName);
     }
+  };
+
+  // Initial username load and setup interval to check for changes
+  useEffect(() => {
+    checkUsername();
+    
+    // Check for username changes every second
+    const interval = setInterval(checkUsername, 1000);
+    
+    // Also check when window gains focus
+    const handleFocus = () => checkUsername();
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const scrollToBottom = () => {
@@ -26,14 +43,16 @@ export default function ChatBox({ messages, onSendMessage }) {
   }, [messages]);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (username && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [username]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (input.trim()) {
       if (!username) {
-        alert('Будь ласка, введіть ім’я перед відправкою повідомлень.');
+        alert('Please enter your name before sending messages.');
         return;
       }
       onSendMessage(input.trim());
@@ -55,7 +74,7 @@ export default function ChatBox({ messages, onSendMessage }) {
           color: '#555',
         }}
       >
-        Ім’я користувача не встановлено. Будь ласка, введіть ім’я.
+        Username not set. Please enter your name.
       </Paper>
     );
   }
@@ -137,12 +156,13 @@ export default function ChatBox({ messages, onSendMessage }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           inputRef={inputRef}
-          autoFocus
+          disabled={disabled}
           sx={{ mr: 2 }}
         />
         <Button
           variant="contained"
           type="submit"
+          disabled={disabled}
           sx={{
             backgroundColor: '#0D92F4',
             '&:hover': { backgroundColor: '#0a76c9' },
